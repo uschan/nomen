@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="zh-CN" class="dark overscroll-none">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>Nomen (名·相)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@100;300;400;500;700&family=Noto+Serif+SC:wght@200;300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+      /* Smooth theme transition */
+      body {
+        transition: background-color 0.5s ease, color 0.5s ease;
+        -webkit-tap-highlight-color: transparent;
+      }
+      .font-serif-sc {
+        font-family: 'Noto Serif SC', serif;
+      }
+      /* Custom Ink Spread Animation */
+      @keyframes inkSpread {
+        0% { transform: scale(0.95); opacity: 0; filter: blur(10px); }
+        100% { transform: scale(1); opacity: 1; filter: blur(0px); }
+      }
+      .animate-ink {
+        animation: inkSpread 1.2s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+      }
+      /* Subtle breathing glow */
+      @keyframes breathe {
+        0%, 100% { opacity: 0.3; }
+        50% { opacity: 0.6; }
+      }
+      .animate-breathe {
+        animation: breathe 4s ease-in-out infinite;
+      }
+      /* Slow Spin for Spiral */
+      @keyframes spinSlow {
+        from { transform: translate(-50%, -50%) rotate(0deg); }
+        to { transform: translate(-50%, -50%) rotate(360deg); }
+      }
+      .animate-spin-slow {
+        animation: spinSlow 60s linear infinite;
+      }
+      
+      /* Custom Scrollbar */
+      .custom-scrollbar::-webkit-scrollbar {
+        width: 4px; /* Thinner for elegance */
+      }
+      .custom-scrollbar::-webkit-scrollbar-track {
+        background: transparent;
+      }
+      .custom-scrollbar::-webkit-scrollbar-thumb {
+        background-color: rgba(139, 166, 148, 0.3);
+        border-radius: 10px;
+      }
+      .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+        background-color: rgba(139, 166, 148, 0.5);
+      }
+    </style>
+    <script>
+      tailwind.config = {
+        darkMode: 'class', // Enable class-based dark mode
+        theme: {
+          extend: {
+            colors: {
+              ink: {
+                900: '#050505',
+                800: '#0f1115',
+                700: '#1a1c23', // Dark text on light paper
+                600: '#2d3342',
+              },
+              paper: {
+                50: '#fdfbf7', // Rice paper white
+                100: '#f5f2eb', // Warm off-white
+                200: '#e6e0d2', // Aged paper
+                300: '#d1c7b1',
+              },
+              celadon: {
+                100: '#e0e5df',
+                200: '#c5d1c8',
+                500: '#8ba694',
+                700: '#5a7060', // Darker celadon for light mode text
+              },
+              cinnabar: {
+                500: '#aa3a3a',
+                600: '#8a2b2b',
+                700: '#752424', // Added for button background
+                800: '#5e1b1b', // Added for button hover
+                900: '#450a0a',
+              },
+            },
+            borderRadius: {
+              'xl': '1rem',
+              '2xl': '1.5rem',
+              '3xl': '2rem',
+            }
+          }
+        }
+      }
+    </script>
+  <script type="importmap">
+{
+  "imports": {
+    "@google/genai": "https://esm.sh/@google/genai@^1.33.0",
+    "react/": "https://esm.sh/react@^19.2.3/",
+    "react": "https://esm.sh/react@^19.2.3",
+    "react-dom/": "https://esm.sh/react-dom@^19.2.3/"
+  }
+}
+</script>
+</head>
+  <body class="bg-paper-50 text-ink-900 dark:bg-ink-900 dark:text-celadon-100 antialiased selection:bg-cinnabar-600/30">
+    <div id="root"></div>
+    <script type="module" src="/index.tsx"></script>
+  </body>
+</html>
