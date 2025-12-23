@@ -1,6 +1,7 @@
 import { GoogleGenAI, Type, Schema } from "@google/genai";
 import { AnalysisResult, UserInput } from "../types";
 
+// The API key must be obtained exclusively from the environment variable process.env.API_KEY.
 const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
 // Schema for the "Deep/Colloquial" mode - Updated for Spiral Philosophy
@@ -149,7 +150,7 @@ export const analyzeName = async (input: UserInput): Promise<AnalysisResult> => 
 
   // 1. Generate Text Analysis
   const response = await ai.models.generateContent({
-    model: 'gemini-2.5-flash',
+    model: 'gemini-3-flash-preview',
     contents: prompt,
     config: {
       systemInstruction: systemInstruction,
