@@ -24,7 +24,7 @@ const getApiKey = (): string => {
   return "PENDING_KEY";
 };
 
-// 2. Schemas (RESTORED FULL DETAIL - THE SOUL)
+// 2. Schemas (Exact Match to User Request)
 const deepSchema: Schema = {
   type: Type.OBJECT,
   properties: {
@@ -133,7 +133,6 @@ export const analyzeName = async (input: UserInput): Promise<AnalysisResult> => 
 
   let systemInstruction = "";
 
-  // 3. RESTORED FULL PROMPTS - THE SOUL
   if (isDeepMode) {
     systemInstruction = `
         You are "Nomen (名·相)". You are not just a fortune teller, you are a "Ferryman" of souls (摆渡人).
@@ -182,58 +181,65 @@ export const analyzeName = async (input: UserInput): Promise<AnalysisResult> => 
     }
   }
 
-  // 4. Generate Content (Using gemini-3-flash-preview for better instruction following)
+  // 3. Generate Text Analysis
+  // REVERTED TO gemini-2.5-flash as requested to ensure output style matches original
+  const response = await ai.models.generateContent({
+    model: 'gemini-2.5-flash',
+    contents: prompt,
+    config: {
+      systemInstruction: systemInstruction,
+      responseMimeType: "application/json",
+      responseSchema: isDeepMode ? deepSchema : standardSchema
+    }
+  });
+
+  const textResultString = response.text;
+  if (!textResultString) throw new Error("API 返回为空");
+  
+  const rawData = JSON.parse(textResultString);
+  
+  // Construct the correct result object based on mode
+  let result: AnalysisResult;
+
+  if (isDeepMode) {
+    result = {
+        id: crypto.randomUUID(),
+        timestamp: Date.now(),
+        userInput: input,
+        mode: 'deep',
+        ...rawData
+    } as AnalysisResult;
+  } else {
+    result = {
+        id: crypto.randomUUID(),
+        timestamp: Date.now(),
+        userInput: input,
+        mode: 'standard',
+        ...rawData
+    } as AnalysisResult;
+  }
+
+  // 4. Generate Image (Optional)
   try {
-      const response = await ai.models.generateContent({
-        model: 'gemini-3-flash-preview',
-        contents: prompt,
-        config: {
-          systemInstruction: systemInstruction,
-          responseMimeType: "application/json",
-          responseSchema: isDeepMode ? deepSchema : standardSchema
-        }
-      });
+    const imageResponse = await ai.models.generateContent({
+        model: 'gemini-2.5-flash-image',
+        contents: {
+            parts: [{ text: result.visualPrompt + " style of Neo-Oriental Cyberpunk, spiral composition, golden ratio, ink wash painting, ethereal, minimal, masterpiece, 8k" }]
+        },
+        config: { imageConfig: { aspectRatio: "1:1" } }
+    });
 
-      const textResultString = response.text;
-      if (!textResultString) throw new Error("API 返回为空");
-      
-      const rawData = JSON.parse(textResultString);
-      
-      let result: AnalysisResult = {
-            id: crypto.randomUUID(),
-            timestamp: Date.now(),
-            userInput: input,
-            mode: isDeepMode ? 'deep' : 'standard',
-            ...rawData
-      } as AnalysisResult;
-
-      // 5. Generate Image (Optional)
-      try {
-        const imageResponse = await ai.models.generateContent({
-            model: 'gemini-2.5-flash-image',
-            contents: {
-                parts: [{ text: result.visualPrompt + " style of Neo-Oriental Cyberpunk, spiral composition, golden ratio, ink wash painting, ethereal, minimal, masterpiece, 8k" }]
-            },
-            config: { imageConfig: { aspectRatio: "1:1" } }
-        });
-
-        if (imageResponse.candidates?.[0]?.content?.parts) {
-            for (const part of imageResponse.candidates[0].content.parts) {
-                if (part.inlineData) {
-                    result.imageUrl = `data:image/png;base64,${part.inlineData.data}`;
-                    break;
-                }
+    if (imageResponse.candidates?.[0]?.content?.parts) {
+        for (const part of imageResponse.candidates[0].content.parts) {
+            if (part.inlineData) {
+                result.imageUrl = `data:image/png;base64,${part.inlineData.data}`;
+                break;
             }
         }
-      } catch (imgError) {
-        console.warn("Image generation skipped", imgError);
-      }
-
-      return result;
-
-  } catch (error: any) {
-      console.error("Gemini API Error:", error);
-      // Pass the actual error message to the UI
-      throw new Error(error.message || "推演过程中断");
+    }
+  } catch (imgError) {
+    console.warn("Image generation skipped", imgError);
   }
+
+  return result;
 };
