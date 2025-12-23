@@ -1,8 +1,27 @@
 import { GoogleGenAI, Type, Schema } from "@google/genai";
 import { AnalysisResult, UserInput } from "../types";
 
-// The API key must be obtained exclusively from the environment variable process.env.API_KEY.
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+// Helper to safely get the API Key in various environments (Vite/Node)
+// This prevents "process is not defined" or "API Key missing" crashes at startup.
+const getApiKey = (): string => {
+  // 1. Try standard process.env (Convention/Node)
+  try {
+    if (typeof process !== "undefined" && process.env?.API_KEY) {
+      return process.env.API_KEY;
+    }
+  } catch {}
+
+  // 2. Try Vite's import.meta.env (Browser/Vite standard)
+  try {
+    // @ts-ignore: Suppress TS error if import.meta types aren't fully set
+    if (typeof import.meta !== "undefined" && import.meta.env?.VITE_API_KEY) {
+      // @ts-ignore
+      return import.meta.env.VITE_API_KEY;
+    }
+  } catch {}
+
+  return "";
+};
 
 // Schema for the "Deep/Colloquial" mode - Updated for Spiral Philosophy
 const deepSchema: Schema = {
@@ -88,6 +107,16 @@ const standardSchema: Schema = {
 };
 
 export const analyzeName = async (input: UserInput): Promise<AnalysisResult> => {
+  // 1. Get API Key safely inside the function (Lazy Initialization)
+  const apiKey = getApiKey();
+  
+  if (!apiKey) {
+    throw new Error("API Key 未配置。请在 .env 中设置 VITE_API_KEY (推荐) 或 API_KEY。");
+  }
+
+  // 2. Initialize Client here to avoid global scope crashes
+  const ai = new GoogleGenAI({ apiKey });
+
   const isDeepMode = input.persona === 'colloquial';
   
   const prompt = `
@@ -148,7 +177,7 @@ export const analyzeName = async (input: UserInput): Promise<AnalysisResult> => 
     }
   }
 
-  // 1. Generate Text Analysis
+  // 3. Generate Text Analysis
   const response = await ai.models.generateContent({
     model: 'gemini-3-flash-preview',
     contents: prompt,
@@ -185,7 +214,7 @@ export const analyzeName = async (input: UserInput): Promise<AnalysisResult> => 
     } as AnalysisResult;
   }
 
-  // 2. Generate Image
+  // 4. Generate Image
   try {
     const imageResponse = await ai.models.generateContent({
         model: 'gemini-2.5-flash-image',
