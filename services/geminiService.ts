@@ -10,9 +10,13 @@ import { AnalysisResult, UserInput } from "../types";
 const getApiKey = (): string => {
   try {
     // @ts-ignore: Vite standard
-    const key = import.meta.env?.VITE_API_KEY;
-    if (key && typeof key === 'string' && key.length > 0) {
-      return key;
+    if (import.meta.env?.VITE_API_KEY) {
+      // @ts-ignore
+      return import.meta.env.VITE_API_KEY;
+    }
+    // Node/Process fallback
+    if (typeof process !== "undefined" && process.env?.API_KEY) {
+      return process.env.API_KEY;
     }
   } catch (e) {
     // Ignore environment access errors
@@ -20,7 +24,7 @@ const getApiKey = (): string => {
   return "PENDING_KEY";
 };
 
-// 2. Schemas (RESTORED FULL DETAIL)
+// 2. Schemas (RESTORED FULL DETAIL - THE SOUL)
 const deepSchema: Schema = {
   type: Type.OBJECT,
   properties: {
@@ -84,14 +88,15 @@ const deepSchema: Schema = {
   required: ["prologue", "imageryDetail", "personalityDetail", "fortuneDetail", "summary", "advice", "finalQuestion", "goldValue", "dailyMantra", "visualPrompt", "timeline", "energyTotem"]
 };
 
+// Schema for the Standard modes (Sage, Psychologist, Mentor)
 const standardSchema: Schema = {
   type: Type.OBJECT,
   properties: {
     prologue: { type: Type.STRING, description: "前言断语" },
-    imagery: { type: Type.STRING, description: "Layer 1: Imagery Analysis" },
-    energy: { type: Type.STRING, description: "Layer 2: Energy/Five Elements" },
-    psychology: { type: Type.STRING, description: "Layer 3: Psychological Archetype" },
-    sociology: { type: Type.STRING, description: "Layer 4: Social Strategy" },
+    imagery: { type: Type.STRING, description: "Layer 1" },
+    energy: { type: Type.STRING, description: "Layer 2" },
+    psychology: { type: Type.STRING, description: "Layer 3" },
+    sociology: { type: Type.STRING, description: "Layer 4" },
     summary: { type: Type.STRING, description: "Summary" },
     advice: { type: Type.STRING, description: "Advice" },
     finalQuestion: { type: Type.STRING, description: "Ultimate Question" },
@@ -113,6 +118,7 @@ export const analyzeName = async (input: UserInput): Promise<AnalysisResult> => 
   }
 
   // 2. Initialize Instance (Safe now because key is definitely not empty)
+  // Moving this inside the function fixes the crash on load issue.
   const ai = new GoogleGenAI({ apiKey: currentKey });
 
   const isDeepMode = input.persona === 'colloquial';
@@ -127,7 +133,7 @@ export const analyzeName = async (input: UserInput): Promise<AnalysisResult> => 
 
   let systemInstruction = "";
 
-  // 3. RESTORED FULL PROMPTS
+  // 3. RESTORED FULL PROMPTS - THE SOUL
   if (isDeepMode) {
     systemInstruction = `
         You are "Nomen (名·相)". You are not just a fortune teller, you are a "Ferryman" of souls (摆渡人).
@@ -176,7 +182,7 @@ export const analyzeName = async (input: UserInput): Promise<AnalysisResult> => 
     }
   }
 
-  // 4. Generate Content
+  // 4. Generate Content (Using gemini-3-flash-preview for better instruction following)
   try {
       const response = await ai.models.generateContent({
         model: 'gemini-3-flash-preview',
