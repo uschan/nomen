@@ -1,0 +1,21 @@
+{
+  "name": "Nomen (名·相)",
+  "short_name": "Nomen",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#050505",
+  "theme_color": "#050505",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "https://pic.wildsalt.me/storage/img/logo/nomen-png-1767321905701-2966.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "https://pic.wildsalt.me/storage/img/logo/nomen-png-1767321905701-2966.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
